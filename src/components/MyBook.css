@@ -1,0 +1,141 @@
+.my-book {
+  padding: 24px 0;
+}
+
+.book-header {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.book-cover-large {
+  width: 200px;
+  flex-shrink: 0;
+}
+
+.book-cover-large img,
+.book-cover-large .book-placeholder {
+  width: 100%;
+  aspect-ratio: 2/3;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.book-details {
+  flex: 1;
+}
+
+.book-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.book-author {
+  font-size: 18px;
+  color: #666;
+  margin: 0 0 24px 0;
+}
+
+.progress-info {
+  margin-bottom: 16px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.3s;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.reading-status {
+  margin-top: 16px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #667eea;
+  color: white;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.view-switcher {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.switch-button {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.3s;
+}
+
+.switch-button:hover {
+  color: #667eea;
+}
+
+.switch-button.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+}
+
+.content-area {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 767px) {
+  .book-header {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .book-cover-large {
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+
+  .book-title {
+    font-size: 24px;
+    text-align: center;
+  }
+
+  .book-author {
+    text-align: center;
+  }
+}
+

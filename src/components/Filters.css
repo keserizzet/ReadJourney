@@ -1,0 +1,73 @@
+.filters-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filters-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 16px;
+}
+
+.filter-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 14px 16px;
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  transition: all 0.3s ease;
+}
+
+.filter-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.filter-input:hover {
+  border-color: var(--color-text-tertiary);
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: var(--color-accent-blue);
+  box-shadow: 0 0 0 3px rgba(79, 146, 247, 0.1);
+}
+
+.filter-button {
+  padding: 14px 24px;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.filter-button:hover {
+  background-color: var(--color-bg-primary);
+  border-color: var(--color-text-tertiary);
+}
+
+@media (max-width: 767px) {
+  .filters-form {
+    flex-direction: column;
+  }
+
+  .filter-input {
+    width: 100%;
+  }
+}

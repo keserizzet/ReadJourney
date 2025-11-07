@@ -1,0 +1,19 @@
+.reading-page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+}
+
+@media (max-width: 767px) {
+  .reading-page {
+    padding: 20px 16px;
+  }
+}
+
