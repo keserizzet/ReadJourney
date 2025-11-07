@@ -1,9 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { User } from '../../types';
+import type { AppUser } from '../../firebase/authService';
 
 interface AuthState {
-  user: User | null;
+  user: AppUser | null;
   token: string | null;
   isAuthenticated: boolean;
 }
@@ -18,7 +18,10 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setCredentials: (state, action: PayloadAction<{ user: User; token: string }>) => {
+    setCredentials: (
+      state,
+      action: PayloadAction<{ user: AppUser; token: string }>
+    ) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
@@ -37,4 +40,3 @@ const authSlice = createSlice({
 
 export const { setCredentials, logout } = authSlice.actions;
 export default authSlice.reducer;
-
