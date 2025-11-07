@@ -9,33 +9,35 @@ interface StatisticsProps {
 
 const Statistics: React.FC<StatisticsProps> = ({ book, sessions, progress }) => {
   const totalPagesRead = sessions.reduce((sum, session) => {
-    return sum + (session.finishPage - session.startPage);
+    const finishPage = session.finishPage ?? session.startPage;
+    return sum + (finishPage - session.startPage);
   }, 0);
 
   const totalReadingTime = sessions.reduce((sum, session) => {
-    return sum + (session.readingTime || 0);
+    return sum + (session.readingTime ?? 0);
   }, 0);
 
   const averageSpeed =
     sessions.length > 0
-      ? sessions.reduce((sum, session) => sum + (session.readingSpeed || 0), 0) /
+      ? sessions.reduce((sum, session) => sum + (session.readingSpeed ?? 0), 0) /
         sessions.length
       : 0;
 
   const formatTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = Math.floor(minutes % 60);
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
-  const progressData = sessions.map((session) => ({
-    date: new Date(session.startReadingTime).toLocaleDateString(),
-    pages: session.finishPage - session.startPage,
-    percentage: ((session.finishPage / book.totalPages) * 100).toFixed(1),
-  }));
+  const progressData = sessions.map((session) => {
+    const startTime = session.startReadingTime ?? '';
+    const finishPage = session.finishPage ?? session.startPage;
+    return {
+      date: startTime ? new Date(startTime).toLocaleDateString() : 'Unknown',
+      pages: finishPage - session.startPage,
+      percentage: ((finishPage / book.totalPages) * 100).toFixed(1),
+    };
+  });
 
   return (
     <div className="statistics">
@@ -95,4 +97,3 @@ const Statistics: React.FC<StatisticsProps> = ({ book, sessions, progress }) => 
 };
 
 export default Statistics;
-
