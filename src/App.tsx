@@ -1,27 +1,67 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAppSelector } from './store/hooks';
-import PrivateRoute from './components/PrivateRoute';
-import MainLayout from './components/MainLayout';
-import RegisterPage from './pages/RegisterPage';
-import LoginPage from './pages/LoginPage';
-import RecommendedPage from './pages/RecommendedPage';
-import LibraryPage from './pages/LibraryPage';
-import ReadingPage from './pages/ReadingPage';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useAppSelector, useAppDispatch } from "./store/hooks";
+import { setCredentials, logout } from "./store/slices/authSlice";
+import { firebaseAuth } from "./firebase/authService";
+
+// Sayfalar
+import PrivateRoute from "./components/PrivateRoute";
+import MainLayout from "./components/MainLayout";
+import RegisterPage from "./pages/RegisterPage";
+import LoginPage from "./pages/LoginPage";
+import RecommendedPage from "./pages/RecommendedPage";
+import LibraryPage from "./pages/LibraryPage";
+import ReadingPage from "./pages/ReadingPage";
 
 function App() {
+  const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+
+  /**
+   * ✅ Firebase oturum değişikliklerini dinler
+   * (Sayfa yenilenince veya token yenilenince otomatik giriş sağlar)
+   */
+  useEffect(() => {
+    const unsubscribe = firebaseAuth.listenAuthChanges(async (user) => {
+      if (user) {
+        const token = localStorage.getItem("token") || "";
+        dispatch(setCredentials({ user, token }));
+      } else {
+        dispatch(logout());
+      }
+    });
+
+    return () => unsubscribe();
+  }, [dispatch]);
 
   return (
     <BrowserRouter>
       <Routes>
+        {/* 🔹 Register Sayfası */}
         <Route
           path="/register"
-          element={isAuthenticated ? <Navigate to="/recommended" replace /> : <RegisterPage />}
+          element={
+            isAuthenticated ? (
+              <Navigate to="/recommended" replace />
+            ) : (
+              <RegisterPage />
+            )
+          }
         />
+
+        {/* 🔹 Login Sayfası */}
         <Route
           path="/login"
-          element={isAuthenticated ? <Navigate to="/recommended" replace /> : <LoginPage />}
+          element={
+            isAuthenticated ? (
+              <Navigate to="/recommended" replace />
+            ) : (
+              <LoginPage />
+            )
+          }
         />
+
+        {/* 🔹 Ana Uygulama (korumalı alan) */}
         <Route
           path="/"
           element={
@@ -35,6 +75,8 @@ function App() {
           <Route path="library" element={<LibraryPage />} />
           <Route path="reading/:bookId" element={<ReadingPage />} />
         </Route>
+
+        {/* 🔹 Hatalı yönlendirmelerde varsayılan sayfa */}
         <Route path="*" element={<Navigate to="/recommended" replace />} />
       </Routes>
     </BrowserRouter>

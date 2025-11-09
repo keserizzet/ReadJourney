@@ -2,14 +2,14 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
+  onAuthStateChanged,
   type User as FirebaseUser,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "./config";
 
 /**
- * 🔹 Uygulama içinde kullanılacak sade kullanıcı tipi
- * Firebase'in karmaşık `User` tipinden ayırıyoruz.
+ * 🔹 Uygulamada kullanılacak sade kullanıcı tipi
  */
 export interface AppUser {
   id: string;
@@ -19,10 +19,9 @@ export interface AppUser {
 
 /**
  * 🔹 Firebase Authentication + Firestore Wrapper
- * Kullanıcı kayıt, giriş, çıkış ve mevcut kullanıcı işlemleri burada.
  */
 export const firebaseAuth = {
-  /** ✅ Kullanıcı kaydı oluşturur (hem Firebase Auth hem Firestore'da) */
+  /** ✅ Kullanıcı kaydı (Firebase + Firestore) */
   register: async (
     name: string,
     email: string,
@@ -42,24 +41,25 @@ export const firebaseAuth = {
         email: user.email || email,
       };
 
-      // Firestore'a ek olarak kullanıcı kaydı
       await setDoc(doc(db, "users", user.uid), {
         name,
         email,
         createdAt: new Date().toISOString(),
       });
 
+      // localStorage'a kalıcı kayıt (Netlify'da oturumun düşmesini engeller)
+      localStorage.setItem("user", JSON.stringify(userData));
+      const token = await user.getIdToken();
+      localStorage.setItem("token", token);
+
       return userData;
     } catch (err: any) {
       console.error("🔥 Firebase register error:", err.code, err.message);
-      throw new Error(
-        err.message ||
-          "Registration failed. Please check your email and password."
-      );
+      throw new Error(err.message || "Registration failed.");
     }
   },
 
-  /** ✅ Kullanıcı giriş yapar, Firestore'dan isim bilgisini çeker */
+  /** ✅ Giriş yapar + Firestore’dan ismi çeker */
   login: async (email: string, password: string): Promise<AppUser> => {
     try {
       const userCredential = await signInWithEmailAndPassword(
@@ -79,32 +79,69 @@ export const firebaseAuth = {
         console.warn("⚠️ Firestore kullanıcı verisi alınamadı:", firestoreErr);
       }
 
-      return {
+      const userData: AppUser = {
         id: user.uid,
         name: userName,
         email: user.email || email,
       };
+
+      // 🔐 Oturum kalıcı olsun
+      localStorage.setItem("user", JSON.stringify(userData));
+      const token = await user.getIdToken();
+      localStorage.setItem("token", token);
+
+      return userData;
     } catch (err: any) {
       console.error("🔥 Firebase login error:", err.code, err.message);
-      throw new Error(
-        err.message || "Login failed. Please check your credentials."
-      );
+      throw new Error(err.message || "Login failed.");
     }
   },
 
-  /** ✅ Oturumu kapatır */
+  /** 🚪 Oturumu kapatır */
   logout: async (): Promise<void> => {
     try {
       await signOut(auth);
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
     } catch (err: any) {
       console.error("⚠️ Logout error:", err.message);
       throw new Error("Logout failed.");
     }
   },
 
-  /** ✅ Aktif kullanıcıyı döner */
+  /** 👀 Aktif kullanıcıyı döner */
   getCurrentUser: (): FirebaseUser | null => {
     return auth.currentUser;
+  },
+
+  /** 🧠 Oturum değişimlerini dinler (Netlify reload sonrası bile kalır) */
+  listenAuthChanges: (callback: (user: AppUser | null) => void) => {
+    return onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        let name = user.displayName || "User";
+        try {
+          const docSnap = await getDoc(doc(db, "users", user.uid));
+          const data = docSnap.data();
+          if (data?.name) name = data.name;
+        } catch {}
+
+        const userData: AppUser = {
+          id: user.uid,
+          name,
+          email: user.email || "",
+        };
+
+        // token yenileme
+        const token = await user.getIdToken();
+        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem("token", token);
+        callback(userData);
+      } else {
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        callback(null);
+      }
+    });
   },
 };
 
