@@ -46,12 +46,17 @@ api.interceptors.response.use(
       });
     }
 
-    // 🔐 Unauthorized - reset session
+    // 🔐 Unauthorized - reset session (sadece bir kez)
     if (status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      if (window.location.pathname !== "/login") {
-        window.location.href = "/login";
+      const currentPath = window.location.pathname;
+      if (currentPath !== "/login" && currentPath !== "/register") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        // Sadece bir kez redirect et
+        if (!sessionStorage.getItem("redirected")) {
+          sessionStorage.setItem("redirected", "true");
+          window.location.href = "/login";
+        }
       }
     }
 

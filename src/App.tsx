@@ -23,36 +23,52 @@ function App() {
    */
   useEffect(() => {
     let isMounted = true;
+    let isInitialized = false;
     
     const unsubscribe = firebaseAuth.listenAuthChanges(async (user: any) => {
       if (!isMounted) return;
       
+      // İlk yüklemede sadece bir kez çalış
+      if (!isInitialized) {
+        isInitialized = true;
+      }
+      
       if (user) {
-        // Token kontrolü - eğer token yoksa veya geçersizse, backend'den token al
-        let token: string | null = localStorage.getItem("token");
-        
-        // Token yoksa veya geçersizse, Firebase token'ı kullan
-        if (!token) {
-          try {
-            token = await user.getIdToken();
+        // Token kontrolü - Firebase token'ı kullan
+        let token: string | null = null;
+        try {
+          const firebaseUser = firebaseAuth.getCurrentUser();
+          if (firebaseUser) {
+            token = await firebaseUser.getIdToken();
             if (token) {
               localStorage.setItem("token", token);
             }
-          } catch (err) {
-            console.error("Token alınamadı:", err);
-            dispatch(logout());
-            return;
           }
+        } catch (err) {
+          console.error("Token alınamadı:", err);
+          if (isMounted) {
+            dispatch(logout());
+          }
+          return;
         }
         
-        if (token) {
-          dispatch(setCredentials({ user, token }));
+        if (token && isMounted) {
+          // Sadece kullanıcı değiştiyse veya ilk yüklemede dispatch et
+          const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+          if (!currentUser || currentUser.id !== user.id) {
+            dispatch(setCredentials({ user, token }));
+          }
         }
       } else {
-        // Kullanıcı yoksa logout yap
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        dispatch(logout());
+        // Kullanıcı yoksa logout yap (sadece gerçekten logout olduysa)
+        if (isMounted) {
+          const currentAuth = JSON.parse(localStorage.getItem("user") || "null");
+          if (currentAuth) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            dispatch(logout());
+          }
+        }
       }
     });
 
