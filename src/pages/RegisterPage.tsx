@@ -4,7 +4,7 @@ import * as yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../store/hooks';
 import { setCredentials } from '../store/slices/authSlice';
-import { firebaseAuth } from '../firebase/authService';
+import firebaseAuth from '../firebase/authService';
 import RegisterForm from '../components/RegisterForm';
 import './AuthPage.css';
 
