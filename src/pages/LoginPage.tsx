@@ -5,7 +5,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../store/hooks';
 import { setCredentials } from '../store/slices/authSlice';
 import { firebaseAuth } from '../firebase/authService';
-import { authAPI } from '../services/api';
 import './AuthPage.css';
 
 const loginSchema = yup.object({
@@ -38,18 +37,11 @@ const LoginPage: React.FC = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const firebaseUser = await firebaseAuth.login(data.email, data.password);
-      const backendResponse = await authAPI.login(data.email, data.password);
-      dispatch(
-        setCredentials({
-          user: {
-            id: firebaseUser.id,
-            name: backendResponse.user?.name || firebaseUser.name,
-            email: firebaseUser.email,
-          },
-          token: backendResponse.token,
-        })
-      );
+      const user = await firebaseAuth.login(data.email, data.password);
+      const firebaseUser = await firebaseAuth.getCurrentUser();
+      const token = firebaseUser ? await firebaseUser.getIdToken() : '';
+
+      dispatch(setCredentials({ user, token }));
       navigate('/recommended');
     } catch (error: any) {
       alert('Authentication failed. Please check your email and password.');
