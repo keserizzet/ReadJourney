@@ -40,16 +40,18 @@ const RegisterPage: React.FC = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      const user = await firebaseAuth.register(data.name, data.email, data.password);
-      const firebaseUser = await firebaseAuth.getCurrentUser();
-      const token = firebaseUser ? await firebaseUser.getIdToken() : '';
+      // 1. Firebase'e kayıt yap
+      const firebaseUser = await firebaseAuth.register(data.name, data.email, data.password);
       
-      dispatch(setCredentials({ user, token }));
-      navigate('/recommended');
-    } catch (error: any) {
-      alert(error.message || 'Registration failed. Please try again.');
-    }
-  };
+      // 2. Backend API'ye kayıt yap
+      const { authAPI } = await import('../services/api');
+      const backendResponse = await authAPI.register(data.name, data.email, data.password);
+      
+      // 3. Redux state'i güncelle
+      dispatch(setCredentials({ 
+        user: firebaseUser, 
+        token: backendResponse.token 
+      }));  };
 
   return (
     <div className="auth-page">
