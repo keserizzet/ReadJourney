@@ -131,10 +131,9 @@ export const firebaseAuth = {
           email: user.email || "",
         };
 
-        // token yenileme
-        const token = await user.getIdToken();
+        // Backend token'ı koru, sadece user bilgisini güncelle
+        // Token sadece login/register sırasında backend'den alınır
         localStorage.setItem("user", JSON.stringify(userData));
-        localStorage.setItem("token", token);
         callback(userData);
       } else {
         localStorage.removeItem("user");

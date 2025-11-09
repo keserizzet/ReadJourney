@@ -19,47 +19,32 @@ function App() {
 
   /**
    * ✅ Firebase oturum değişikliklerini dinler
-   * (Sayfa yenilenince veya token yenilenince otomatik giriş sağlar)
+   * (Sayfa yenilenince otomatik giriş sağlar - backend token'ı değiştirmez)
    */
   useEffect(() => {
     let isMounted = true;
-    let isInitialized = false;
     
     const unsubscribe = firebaseAuth.listenAuthChanges(async (user: any) => {
       if (!isMounted) return;
       
-      // İlk yüklemede sadece bir kez çalış
-      if (!isInitialized) {
-        isInitialized = true;
-      }
-      
       if (user) {
-        // Token kontrolü - Firebase token'ı kullan
-        let token: string | null = null;
-        try {
-          const firebaseUser = firebaseAuth.getCurrentUser();
-          if (firebaseUser) {
-            token = await firebaseUser.getIdToken();
-            if (token) {
-              localStorage.setItem("token", token);
-            }
-          }
-        } catch (err) {
-          console.error("Token alınamadı:", err);
-          if (isMounted) {
-            dispatch(logout());
-          }
-          return;
-        }
+        // Backend token'ı koru, sadece user bilgisini güncelle
+        const existingToken = localStorage.getItem("token");
+        const existingUser = JSON.parse(localStorage.getItem("user") || "null");
         
-        if (token && isMounted) {
-          // Sadece kullanıcı değiştiyse veya Redux'ta yoksa dispatch et
-          if (!currentReduxUser || currentReduxUser.id !== user.id) {
+        // Sadece kullanıcı değiştiyse veya Redux'ta yoksa dispatch et
+        if (!currentReduxUser || currentReduxUser.id !== user.id) {
+          // Backend token varsa onu kullan, yoksa Firebase token (geçici)
+          const token = existingToken || await firebaseAuth.getCurrentUser()?.getIdToken() || "";
+          if (token) {
             dispatch(setCredentials({ user, token }));
           }
+        } else if (existingUser && existingUser.id === user.id && existingToken) {
+          // Aynı kullanıcı, sadece user bilgisini güncelle (token'ı değiştirme)
+          localStorage.setItem("user", JSON.stringify(user));
         }
       } else {
-        // Kullanıcı yoksa logout yap (sadece Redux'ta hala authenticated ise)
+        // Kullanıcı yoksa logout yap
         if (isMounted && currentReduxUser) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
@@ -72,7 +57,7 @@ function App() {
       isMounted = false;
       unsubscribe();
     };
-  }, [dispatch]);
+  }, [dispatch, currentReduxUser]);
 
   return (
     <BrowserRouter>
