@@ -51,7 +51,14 @@ const RegisterPage: React.FC = () => {
       dispatch(setCredentials({ 
         user: firebaseUser, 
         token: backendResponse.token 
-      }));  };
+      }));
+      
+      navigate('/recommended');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      alert(error.message || 'Registration failed. Please try again.');
+    }
+  };
 
   return (
     <div className="auth-page">
@@ -69,4 +76,3 @@ const RegisterPage: React.FC = () => {
 };
 
 export default RegisterPage;
-
