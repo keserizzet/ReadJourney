@@ -15,7 +15,7 @@ import ReadingPage from "./pages/ReadingPage";
 
 function App() {
   const dispatch = useAppDispatch();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user: currentReduxUser } = useAppSelector((state) => state.auth);
 
   /**
    * ✅ Firebase oturum değişikliklerini dinler
@@ -53,21 +53,17 @@ function App() {
         }
         
         if (token && isMounted) {
-          // Sadece kullanıcı değiştiyse veya ilk yüklemede dispatch et
-          const currentUser = JSON.parse(localStorage.getItem("user") || "null");
-          if (!currentUser || currentUser.id !== user.id) {
+          // Sadece kullanıcı değiştiyse veya Redux'ta yoksa dispatch et
+          if (!currentReduxUser || currentReduxUser.id !== user.id) {
             dispatch(setCredentials({ user, token }));
           }
         }
       } else {
-        // Kullanıcı yoksa logout yap (sadece gerçekten logout olduysa)
-        if (isMounted) {
-          const currentAuth = JSON.parse(localStorage.getItem("user") || "null");
-          if (currentAuth) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            dispatch(logout());
-          }
+        // Kullanıcı yoksa logout yap (sadece Redux'ta hala authenticated ise)
+        if (isMounted && currentReduxUser) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          dispatch(logout());
         }
       }
     });
