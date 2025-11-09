@@ -37,14 +37,41 @@ const LoginPage: React.FC = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const user = await firebaseAuth.login(data.email, data.password);
-      const firebaseUser = await firebaseAuth.getCurrentUser();
-      const token = firebaseUser ? await firebaseUser.getIdToken() : '';
-
-      dispatch(setCredentials({ user, token }));
+      // 1. Firebase'e giriş yap
+      const firebaseUser = await firebaseAuth.login(data.email, data.password);
+      
+      // 2. Backend API'ye giriş yap
+      const { authAPI } = await import('../services/api');
+      let backendResponse;
+      try {
+        backendResponse = await authAPI.login(data.email, data.password);
+      } catch (backendError: any) {
+        // Backend'de kullanıcı yoksa kayıt et
+        if (backendError.response?.status === 401 || backendError.response?.status === 404) {
+          try {
+            backendResponse = await authAPI.register(firebaseUser.name, data.email, data.password);
+          } catch (registerError: any) {
+            if (registerError.response?.status === 409) {
+              alert('This email already exists in the backend. Please check your password.');
+              return;
+            }
+            throw registerError;
+          }
+        } else {
+          throw backendError;
+        }
+      }
+      
+      // 3. Redux state'i güncelle
+      dispatch(setCredentials({ 
+        user: firebaseUser, 
+        token: backendResponse.token 
+      }));
+      
       navigate('/recommended');
     } catch (error: any) {
-      alert('Authentication failed. Please check your email and password.');
+      console.error('Login error:', error);
+      alert(error.message || 'Authentication failed. Please check your email and password.');
     }
   };
 

@@ -53,11 +53,10 @@ api.interceptors.response.use(
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         // Redirect'i sadece bir kez yap
-        setTimeout(() => {
-          if (window.location.pathname !== "/login") {
-            window.location.href = "/login";
-          }
-        }, 100);
+        if (!sessionStorage.getItem("authRedirect")) {
+          sessionStorage.setItem("authRedirect", "true");
+          window.location.href = "/login";
+        }
       }
     }
 

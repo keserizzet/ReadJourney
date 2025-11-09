@@ -19,45 +19,37 @@ function App() {
 
   /**
    * ✅ Firebase oturum değişikliklerini dinler
-   * (Sayfa yenilenince otomatik giriş sağlar - backend token'ı değiştirmez)
+   * (Sayfa yenilenince otomatik giriş sağlar)
    */
   useEffect(() => {
     let isMounted = true;
+    let hasInitialized = false;
     
     const unsubscribe = firebaseAuth.listenAuthChanges(async (user: any) => {
       if (!isMounted) return;
       
+      // İlk yüklemede sadece bir kez çalış (loop önleme)
+      if (!hasInitialized) {
+        hasInitialized = true;
+      }
+      
       if (user) {
         // Backend token'ı koru, sadece user bilgisini güncelle
         const existingToken = localStorage.getItem("token");
-        const existingUser = JSON.parse(localStorage.getItem("user") || "null");
         
         // Sadece kullanıcı değiştiyse veya Redux'ta yoksa dispatch et
         if (!currentReduxUser || currentReduxUser.id !== user.id) {
-          // Backend token varsa onu kullan
           if (existingToken) {
+            // Backend token varsa onu kullan
             dispatch(setCredentials({ user, token: existingToken }));
           } else {
-            // Token yoksa Firebase token al (geçici çözüm)
-            try {
-              const firebaseUser = firebaseAuth.getCurrentUser();
-              if (firebaseUser) {
-                const firebaseToken = await firebaseUser.getIdToken();
-                if (firebaseToken) {
-                  dispatch(setCredentials({ user, token: firebaseToken }));
-                }
-              }
-            } catch (err) {
-              console.error("Token alınamadı:", err);
-            }
+            // Token yoksa sadece user bilgisini kaydet (backend token login/register'da alınır)
+            localStorage.setItem("user", JSON.stringify(user));
           }
-        } else if (existingUser && existingUser.id === user.id && existingToken) {
-          // Aynı kullanıcı, sadece user bilgisini güncelle (token'ı değiştirme)
-          localStorage.setItem("user", JSON.stringify(user));
         }
       } else {
-        // Kullanıcı yoksa logout yap
-        if (isMounted && currentReduxUser) {
+        // Kullanıcı yoksa logout yap (sadece bir kez)
+        if (isMounted && currentReduxUser && hasInitialized) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           dispatch(logout());
