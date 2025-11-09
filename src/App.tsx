@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "./store/hooks";
 import { setCredentials, logout } from "./store/slices/authSlice";
-import { firebaseAuth } from "./firebase/authService";
+import firebaseAuth from "./firebase/authService";
 
 // Sayfalar
 import PrivateRoute from "./components/PrivateRoute";
@@ -22,16 +22,44 @@ function App() {
    * (Sayfa yenilenince veya token yenilenince otomatik giriş sağlar)
    */
   useEffect(() => {
-    const unsubscribe = firebaseAuth.listenAuthChanges(async (user) => {
+    let isMounted = true;
+    
+    const unsubscribe = firebaseAuth.listenAuthChanges(async (user: any) => {
+      if (!isMounted) return;
+      
       if (user) {
-        const token = localStorage.getItem("token") || "";
-        dispatch(setCredentials({ user, token }));
+        // Token kontrolü - eğer token yoksa veya geçersizse, backend'den token al
+        let token: string | null = localStorage.getItem("token");
+        
+        // Token yoksa veya geçersizse, Firebase token'ı kullan
+        if (!token) {
+          try {
+            token = await user.getIdToken();
+            if (token) {
+              localStorage.setItem("token", token);
+            }
+          } catch (err) {
+            console.error("Token alınamadı:", err);
+            dispatch(logout());
+            return;
+          }
+        }
+        
+        if (token) {
+          dispatch(setCredentials({ user, token }));
+        }
       } else {
+        // Kullanıcı yoksa logout yap
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
         dispatch(logout());
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, [dispatch]);
 
   return (

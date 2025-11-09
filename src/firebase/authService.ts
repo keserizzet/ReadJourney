@@ -116,7 +116,7 @@ export const firebaseAuth = {
 
   /** 🧠 Oturum değişimlerini dinler (Netlify reload sonrası bile kalır) */
   listenAuthChanges: (callback: (user: AppUser | null) => void) => {
-    return onAuthStateChanged(auth, async (user) => {
+    return onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
       if (user) {
         let name = user.displayName || "User";
         try {

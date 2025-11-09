@@ -81,7 +81,7 @@
 
 @media (max-width: 767px) {
   .books-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
 

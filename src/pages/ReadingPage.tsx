@@ -81,8 +81,17 @@ const ReadingPage: React.FC = () => {
 
   const refreshStats = async (id: string) => {
     try {
+      // Library'den kitabı yeniden çek (startReading/finishReading sonrası güncellenmiş olabilir)
+      const libraryBooks = await libraryAPI.getLibrary();
+      const updatedBook = libraryBooks.find((b) => b._id === id);
+      
+      if (updatedBook && alive.current) {
+        setBook(updatedBook);
+      }
+      
       const stats = await readingAPI.getReadingStats(id);
       if (!alive.current) return;
+      
       setSessions(stats.sessions);
       setProgress(stats.progress);
       setIsReading(computeIsReading(stats.sessions));

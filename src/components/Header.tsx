@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logout } from '../store/slices/authSlice';
-import { firebaseAuth } from '../firebase/authService';
+import firebaseAuth from '../firebase/authService';
 import './Header.css';
 
 const Header: React.FC = () => {
