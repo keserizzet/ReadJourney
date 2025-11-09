@@ -34,10 +34,22 @@ function App() {
         
         // Sadece kullanıcı değiştiyse veya Redux'ta yoksa dispatch et
         if (!currentReduxUser || currentReduxUser.id !== user.id) {
-          // Backend token varsa onu kullan, yoksa Firebase token (geçici)
-          const token = existingToken || await firebaseAuth.getCurrentUser()?.getIdToken() || "";
-          if (token) {
-            dispatch(setCredentials({ user, token }));
+          // Backend token varsa onu kullan
+          if (existingToken) {
+            dispatch(setCredentials({ user, token: existingToken }));
+          } else {
+            // Token yoksa Firebase token al (geçici çözüm)
+            try {
+              const firebaseUser = firebaseAuth.getCurrentUser();
+              if (firebaseUser) {
+                const firebaseToken = await firebaseUser.getIdToken();
+                if (firebaseToken) {
+                  dispatch(setCredentials({ user, token: firebaseToken }));
+                }
+              }
+            } catch (err) {
+              console.error("Token alınamadı:", err);
+            }
           }
         } else if (existingUser && existingUser.id === user.id && existingToken) {
           // Aynı kullanıcı, sadece user bilgisini güncelle (token'ı değiştirme)
